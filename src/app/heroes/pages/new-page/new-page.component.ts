@@ -1,10 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { switchMap } from 'rxjs';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 
 import { HeroesService } from '../../services/heroes.service';
 import { Hero, Publisher } from '../../interfaces/hero.interface';
-import { switchMap } from 'rxjs';
+import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-new-page',
@@ -32,7 +35,9 @@ export class NewPageComponent implements OnInit {
   constructor(
     private heroesService: HeroesService,
     private activatedRoute: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private snackbar: MatSnackBar,
+    private dialog: MatDialog,
   ){}
 
   get currentHero(): Hero {
@@ -66,16 +71,37 @@ export class NewPageComponent implements OnInit {
     if( this.currentHero.id ) {
       this.heroesService.updateHero( this.currentHero )
         .subscribe( hero => {
-        // TODO mostrar snackbar
-      });
+          this.showSnackbar(`${hero.superhero} updated!`);
+        });
     return;
     }
 
     this.heroesService.addHero( this.currentHero )
       .subscribe( hero => {
         // TODO mostrar snackbar, y navegar a /heroes/edit/hero.id
-      });
+        this.router.navigate([ '/heroes/edit', hero.id ]);
+        this.showSnackbar(`${hero.superhero} created!`);
 
+      });
+  }
+
+  onDeleteHero() {
+    if ( !this.currentHero.id ) throw Error('Hero id is required');
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: this.heroForm.value
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if ( !result ) return;
+
+      this.heroesService.deleteHeroById( this.currentHero.id );
+      this.router.navigate(['/heroes'])
+    });
+  }
+
+  showSnackbar( message: string ):void {
+    this.snackbar.open( message, 'done', { duration: 2500 } )
   }
 
 }
