@@ -5,6 +5,7 @@ import { Observable, catchError, map, of, tap } from 'rxjs';
 
 import { environments } from 'src/environments/environments';
 import { User } from '../interfaces/user.interface';
+import { Router } from '@angular/router';
 
 @Injectable({providedIn: 'root'})
 export class AuthService {
@@ -12,7 +13,7 @@ export class AuthService {
   private baseUrl = environments.baseUrl;
   private user?: User;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private router: Router) { }
 
   get currentUser():User|undefined {
     if( !this.user ) return undefined;
